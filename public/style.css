@@ -1,0 +1,6 @@
+
+body { font-family: Arial; padding: 20px; background: #eef; }
+.option { margin: 5px 0; display: block; }
+.hidden { display: none; }
+.correct { color: green; }
+.incorrect { color: red; }
