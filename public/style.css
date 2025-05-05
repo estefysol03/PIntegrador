@@ -1,6 +1,80 @@
 
-body { font-family: Arial; padding: 20px; background: #eef; }
+/*body { font-family: Arial; padding: 20px; background: #eef; }
 .option { margin: 5px 0; display: block; }
 .hidden { display: none; }
 .correct { color: green; }
 .incorrect { color: red; }
+*/
+body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    background: rgb(166, 148, 148);
+  }
+  
+  #options {
+   
+    background-color: #ecbbbb;
+    border: 2px solid #ccc;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+  
+    /* centrado de contenido */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .option {
+    margin: 10px 0;
+    padding: 14px 24px;           /* Aumenta el tamaño interno */
+    background-color: #f7f3f9;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    min-width: 250px;             /* Ancho */
+    font-size: 16px;              /* Tamaño del Texto */
+    text-align: center;
+  }
+  
+  .option:hover {
+    background-color: #985555;
+  }
+  
+  .hidden { display: none; }
+  .correct { color: green; font-weight: bold; }
+  .incorrect { color: red; font-weight: bold; }
+  #feedback {
+    text-align: center;
+    font-size: 18px;
+    margin-top: 10px;
+  }
+/* Centrado de Boton Siguiente*/
+  #nextBtn {
+    display: block;
+    margin: 20px auto; /* Centra el botón horizontalmente */
+    padding: 12px 24px; /* Aumenta el tamaño */
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  #nextBtn:hover {
+    background-color: #45a049;
+  }
+  #results {
+    text-align: center;           /* Centra el texto */
+    max-width: 600px;             /* Limita el ancho */
+    margin: 40px auto;            /* Centra el div horizontalmente */
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+  
