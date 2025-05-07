@@ -1,21 +1,43 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
+const https = require('https'); // Usamos https para fetch manual
 const app = express();
 const PORT = 3000;
 
-// traigo los archivos estaticos desde la carpeta public
+const RANKING_FILE = path.join(__dirname, 'ranking.json');
+
+app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Endpoint para preguntas dinamicas
+// Función para hacer "fetch" 
+function fetchJson(url) {
+  return new Promise((resolve, reject) => {
+    https.get(url, res => {
+      let data = '';
+      res.on('data', chunk => (data += chunk));
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          resolve(json);
+        } catch (err) {
+          reject(err);
+        }
+      });
+    }).on('error', reject);
+  });
+}
+
+// Endpoint para preguntas
 app.get('/api/questions', async (req, res) => {
   try {
-    const response = await fetch('https://restcountries.com/v3.1/all');
-    const countries = await response.json();
-
+    const countries = await fetchJson('https://restcountries.com/v3.1/all');
     const questions = [];
-    while (questions.length < 10) {
-      const random = Math.floor(Math.random() * countries.length);
-      const country = countries[random];
+    let attempts = 0;
+
+    while (questions.length < 10 && attempts < 100) {
+      attempts++;
+      const country = countries[Math.floor(Math.random() * countries.length)];
       const type = ["capital", "bandera", "limítrofes"][Math.floor(Math.random() * 3)];
 
       if (type === "capital" && country.capital?.[0]) {
@@ -40,14 +62,18 @@ app.get('/api/questions', async (req, res) => {
       }
     }
 
-    res.json(questions.slice(0, 10)); //el Json le manda 10 preguntas al navegador.
-  } catch (err) {
-    console.error(err);
+    if (questions.length < 10) {
+      return res.status(500).send("No se pudieron generar suficientes preguntas.");
+    }
+
+    res.json(questions.slice(0, 10));
+  } catch (error) {
+    console.error("Error al obtener preguntas:", error);
     res.status(500).send("Error al obtener preguntas");
   }
 });
 
-//genera 4 opciones multiples para una pregunta con su correcta
+// Generador de opciones de respuesta
 function getRandomOptions(countries, correct) {
   const options = new Set([correct]);
   while (options.size < 4) {
@@ -56,17 +82,50 @@ function getRandomOptions(countries, correct) {
   }
   return [...options].sort(() => Math.random() - 0.5);
 }
-// Genero opciones falsas y una verdadera.
+
+// Generador de opciones numericas
 function generateFakeNumbers(correct) {
   const correctNum = parseInt(correct);
   const numbers = new Set([correctNum]);
   while (numbers.size < 4) {
-    let fake = Math.floor(Math.random() * 10) + 1;
-    numbers.add(fake);
+    numbers.add(Math.floor(Math.random() * 10) + 1);
   }
   return [...numbers].sort(() => Math.random() - 0.5).map(String);
 }
 
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+// Ranking
+function loadRanking() {
+  if (fs.existsSync(RANKING_FILE)) {
+    const data = fs.readFileSync(RANKING_FILE, 'utf-8');
+    return JSON.parse(data);
+  }
+  return [];
+}
+
+function saveRanking(ranking) {
+  fs.writeFileSync(RANKING_FILE, JSON.stringify(ranking, null, 2));
+}
+
+app.get('/api/ranking', (req, res) => {
+  const ranking = loadRanking();
+  ranking.sort((a, b) => b.score - a.score);
+  res.json(ranking.slice(0, 20));
 });
+
+app.post('/api/ranking', (req, res) => {
+  const { name, score, correct, time } = req.body;
+
+  if (!name || score == null || correct == null || time == null) {
+    return res.status(400).json({ error: "Datos incompletos" });
+  }
+
+  const ranking = loadRanking();
+  ranking.push({ name, score, correct, time });
+  saveRanking(ranking);
+
+  res.json({ message: "Puntaje guardado exitosamente" });
+});
+
+app.listen(PORT, () => {
+  console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
+}); 
